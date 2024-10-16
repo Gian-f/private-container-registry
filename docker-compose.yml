@@ -1,0 +1,43 @@
+services:
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    restart: always
+    ports:
+      - "120:120"
+    environment:
+      - SINGLE_REGISTRY=true
+      - REGISTRY_TITLE=Docker Registry UI
+      - NGINX_PROXY_PASS_URL=http://registry-server:5000
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - SHOW_CATALOG_NB_TAGS=true
+      - CATALOG_MIN_BRANCHES=1
+      - CATALOG_MAX_BRANCHES=1
+      - TAGLIST_PAGE_SIZE=100
+      - REGISTRY_SECURED=false
+      - CATALOG_ELEMENTS_LIMIT=1000
+    depends_on:
+      - registry-server
+
+
+  registry-server:
+    image: registry:2.8.3
+    container_name: registry-server
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./registry/data:/var/lib/registry
+
+
+  nginx:
+    image: nginx:latest
+    container_name: registry-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - registry-server
+      - registry-ui
